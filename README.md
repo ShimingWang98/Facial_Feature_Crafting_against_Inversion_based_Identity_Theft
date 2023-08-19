@@ -4,7 +4,7 @@ An implementation of protection for image-privacy during inference or training i
 
 ## Content
 
-[TOC]
+The appendix is in appendix.pdf
 
 ## Overview of Crafter
 
