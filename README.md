@@ -18,8 +18,6 @@ Contributions: high utility on general ML tasks; robustness against adaptive att
 
 ## Setup
 
-### Prerequisites
-
 Make sure you have Pytorch 1.10 with cuda version installed on your machine. See [Pytorch official websites ](https://pytorch.org/get-started/locally/) for a detailed installation guide.
 
 In addition, install python dependencies by running:
