@@ -30,7 +30,7 @@ $ pip3 install -r requirements.txt
 
 ### Dataset Preprocessing
 
-The experiments run on cropped and resized CelebA dataset with image size 64 * 64,  and LFW dataset with image size 128 * 128. Due to the limited size of repository, the preprocessed datasets are not provided here. The dataset dictionary should have the structure shown as follows.
+The experiments run on cropped and resized CelebA dataset with image size 64 * 64,  and LFW dataset with image size 128 * 128. The dataset directory should look like this:
 
 ```
 .
