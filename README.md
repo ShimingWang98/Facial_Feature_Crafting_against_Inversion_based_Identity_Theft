@@ -1,30 +1,28 @@
-# Crafter Protection
+# Crafter: Facial Feature Crafting against Inversion-based Identity Theft on Deep Models
 
-An implementation of protection for image-privacy during inference or training in deep neuron network framework. 
+*by Shiming Wang, Zhe Ji, Liyao Xiang, Hao Zhang, Xinbing Wang, Chenghu Zhou, Bo Li* 
 
-## Content
+## Overview
 
-The appendix is in appendix.pdf
+This repository is the code implementation and supplementary material of our [NDSS '24 paper](https://www.ndss-symposium.org/wp-content/uploads/2024-326-paper.pdf)
+We provide a defense to protect identity information in facial images from model inversion attacks. 
+It can be deployed as a plug-in to general edge-cloud computing frameworks without any change in the backend models.
 
-## Overview of Crafter
+It is compatible with both inference and training ML tasks:
 
-Crafter Protection can be used directly in current distributed learning frameworks, where the feature extractor is deployed on edge devices and a downstream machine learning task, e.g. classification, will be done on the cloud server.
+- Inference: The server itself trains both feature extractor and downstream classifier without our defense. Then the feature extractor and our defense run on edge devices. The downstream classifier on cloud receives the protected feature as input and completes the inference.
 
-There are two options, inference and training:
+- Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which serve as the training data of the downstream classifier.
 
-1. Inference: The server itself trains both feature extractor and downstream classifier without crafter. Then the feature extractor and crafter protection runs on edge. The downstream classifier on cloud receives the protected feature as inference input.
-
-2. Training: The server deploy a pretrained feature extractor to edge devices. Edge devices run feature extractor and crafter protection and upload the protected feature to the cloud, which forms the training data of the downstream classifier.
+Contributions: high utility on general ML tasks; robustness against adaptive attackers.
 
 ## Setup
 
 ### Prerequisites
 
-Please install Pytorch 1.10 with cuda version correctly before proceeding to the installation step. See [Pytorch official websites ](https://pytorch.org/get-started/locally/) for detailed installation guide.
+Make sure you have Pytorch 1.10 with cuda version installed on your machine. See [Pytorch official websites ](https://pytorch.org/get-started/locally/) for a detailed installation guide.
 
-### Installation
-
-In the project root directory, run:
+In addition, install python dependencies by running:
 
 ```shell
 $ pip3 install -r requirements.txt
@@ -58,7 +56,7 @@ The `eval_train.csv` and `eval_test.csv` are a split of `pvt_id.csv`, with compl
 
 ### Construct an White-box Attacker
 
-The crafter protection contains an adversarial training process, meaning that we need a fictitious attack runs during protection.
+The crafter protection contains an adversarial training process, meaning our protection uses fictitious attack runs.
 
 #### Train GAN
 
@@ -136,7 +134,7 @@ The training code is `Image2ID/evalTrain.py`. The structure of ID classifier is 
 
 **Step3.**  Calculate the accuracy of the ID classifier as the fictitious attacker's success rate. Calculate the SSIM and FSIM metrics between (reconstructed image, original image) pair as an indicator of the  quality of the reconstructed images.
 
-There are more choices for ID classifier:
+There are more choices for the ID classifier:
 
 1. Python library `facenet_pytorch` provide some pretrained identification network. Limitations: Image size 64 * 64 is too small for these provided network. This choice is only used in case of LFW 128 * 128. Training code is `Image2ID/facenetTrain.py`.
 2. Commercial Face Identification Service. In the experiments, we upload the `eval_train` set to Azure server and upload reconstructed images to query their IDs. The same limitation as `facenet_pytorch`. 
