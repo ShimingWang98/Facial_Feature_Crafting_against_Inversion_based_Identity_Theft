@@ -8,13 +8,13 @@ This repository is the code implementation and supplementary material of our [ND
 We provide a defense to protect identity information in facial images from model inversion attacks. 
 It can be deployed as a plug-in to general edge-cloud computing frameworks without any change in the backend models.
 
-It is compatible with general deep learning tasks including both inference and training:
+The defense is compatible with general deep learning tasks including both inference and training:
 
 - Inference: The server itself trains both feature extractor and downstream classifier without our defense. Then the feature extractor and our defense run on edge devices. The downstream classifier on cloud receives the protected feature as input and completes the inference.
 
 - Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which serve as the training data of the downstream classifier.
 
-Contributions: high utility on general ML tasks; robustness against adaptive attackers.
+Major contributions: high utility on general ML tasks; robustness against adaptive attackers.
 
 ## Setup
 
@@ -30,7 +30,7 @@ $ pip3 install -r requirements.txt
 
 ### Dataset Preprocessing
 
-The experiments run on cropped and resized CelebA dataset with image size 64 * 64,  and LFW dataset with image size 128 * 128. The dataset directory should look like this:
+The experiments run on cropped and resized CelebA dataset with image size 64 * 64,  and LFW with image size 128 * 128. The dataset directory should look like this:
 
 ```
 .
@@ -48,9 +48,9 @@ The experiments run on cropped and resized CelebA dataset with image size 64 * 6
 +-- eval_test_attri.csv
 ```
 
-The `public` dictionary and `private` dictionary are a split of the whole dataset, with no ID overlapping.  Images in `private` are considered as faces of users, which should not be exposed to an attacker, while images in `public` are considered accessible to anyone.  The information about face IDs of `public` and `private` is stored in `pub_id.csv` and `pvt_id.csv` respectively. The information of attributes of faces, such as "Big nose" and "Eyeglasses", of `public` and `private` is stored in `pub_attri.csv` and `pvt_attri.csv` respectively.
+The `public` and `private` directories are a split of the entire dataset, with no ID overlapping.  Images in `private` are faces of private users, which should not be exposed to an attacker. Images in `public` are considered accessible to anyone, eg. celebrity faces crawled from the Internet.  Face IDs are in `pub_id.csv` and `pvt_id.csv`. Facials attributes (e.g. "Big nose", "Eyeglasses" etc.) are  in `pub_attri.csv` and `pvt_attri.csv`.
 
-The `eval_train.csv` and `eval_test.csv` are a split of `pvt_id.csv`, with completely ID overlapping. `eval_train.csv` is used to train ID classifier to evaluate the performance of protection algorithm. `eval_train_attri.csv` and `eval_test_attri.csv` are corresponding split of `pvt_attri.csv`, used to evaluate utility later.
+The `eval_train.csv` and `eval_test.csv` are a split of `pvt_id.csv`, with completely ID overlapping. `eval_train.csv` is used to train an ID classifier that evaluates the privacy of our defense as an oracle. `eval_train_attri.csv` and `eval_test_attri.csv` are a split of `pvt_attri.csv`, used to evaluate the utility of our defense.
 
 ### Construct an White-box Attacker
 
@@ -82,11 +82,11 @@ Some hyperparameters in this code may need to be adjusted.
 
 #### White-box Attack
 
-The function that run a white-box attack is implemented in `Crafter_protection/attacker.py`, which will be imported later.
+The white-box attack is implemented in `Crafter_protection/attacker.py`.
 
 ### Inference Scenario
 
-The whole inference task will take an image as the input, feed it into an encoder to get the feature, then put the feature into a classifier to get the prediction result.
+The inference task will take an image as the input, feed it into an encoder to get the feature, then put the feature into a classifier to get the prediction result.
 
 Here we assume you have a trained encoder and a downstream classifier. Otherwise please run the following code to get one. 
 
