@@ -4,17 +4,17 @@
 
 ## Overview
 
-This repository is the code implementation and supplementary material of our [NDSS '24 paper](https://www.ndss-symposium.org/wp-content/uploads/2024-326-paper.pdf).
-We provide a defense to protect identity information in facial images from model inversion attacks. 
+This repository contains the implementation and appendix of our [NDSS '24 paper](https://www.ndss-symposium.org/wp-content/uploads/2024-326-paper.pdf).
+We provide a defense to protect identity information in facial images from inversion attacks. 
 It can be deployed as a plug-in to general edge-cloud computing frameworks without any change in the backend models.
 
-The defense is compatible with general deep learning tasks including both inference and training:
+This defense is compatible with general deep learning tasks including both inference and training:
 
 - Inference: The server itself trains both feature extractor and downstream classifier without our defense. Then the feature extractor and our defense run on edge devices. The downstream classifier on cloud receives the protected feature as input and completes the inference.
 
 - Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which then serve as the training data of the downstream classifier.
 
-Contributions: high utility on general ML tasks; robustness against adaptive attackers.
+Highlights: nice utility-privacy tradeoff on general ML tasks; robustness against adaptive attackers.
 
 ## Setup
 
@@ -167,4 +167,4 @@ to check the ID classification accuracy, SSIM and FSIM metrics as indicators of 
 
 ### Utility
 
-To simulate a challenging utility task, we choose the multiple binary classification tasks to evaluate the protected feature's utility. For CelebA dataset, we classify all 40 attributes all at once. For the LFW dataset, we choose 10 out of 73 attributes. lay around with these options in `evaluate.py` and `metrics.py` to customize as you like!
+To simulate a challenging utility task, we choose the multiple binary classification tasks to evaluate the protected feature's utility. For CelebA dataset, we classify all 40 attributes all at once. For the LFW dataset, we choose 10 out of 73 attributes. Play around with these options in `evaluate.py` and `metrics.py` to customize as you like!
