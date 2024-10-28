@@ -33,7 +33,7 @@ if __name__ == "__main__":
     pub_attr = "../dataset/pub_attri.csv"
     pub_fig = "../dataset/public"
 
-    os.makedirs(f'../params/blackAtk/', exist_ok=True)
+    os.makedirs(f'../params/decoder/', exist_ok=True)
 
 
     bs = 128
@@ -76,5 +76,5 @@ if __name__ == "__main__":
         print("epoch:{}\tdec_loss: {}".format(T, total_loss_dec / cnt_1))
 
         if (T + 1) % 10 == 0:
-            torch.save(Dec.module.state_dict(), f'../params/blackAtk/dec_e{T}.pkl')
-    torch.save(Dec.module.state_dict(), '../params/blackAtk/dec_final.pkl')
+            torch.save(Dec.module.state_dict(), f'../params/decoder/dec_e{T}.pkl')
+    torch.save(Dec.module.state_dict(), '../params/dec.pkl')

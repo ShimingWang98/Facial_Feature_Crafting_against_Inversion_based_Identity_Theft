@@ -12,9 +12,9 @@ The defense is compatible with general deep learning tasks including both infere
 
 - Inference: The server itself trains both feature extractor and downstream classifier without our defense. Then the feature extractor and our defense run on edge devices. The downstream classifier on cloud receives the protected feature as input and completes the inference.
 
-- Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which serve as the training data of the downstream classifier.
+- Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which then serve as the training data of the downstream classifier.
 
-Major contributions: high utility on general ML tasks; robustness against adaptive attackers.
+Contributions: high utility on general ML tasks; robustness against adaptive attackers.
 
 ## Setup
 
@@ -50,94 +50,121 @@ The experiments run on cropped and resized CelebA dataset with image size 64 * 6
 
 The `public` and `private` directories are a split of the entire dataset, with no ID overlapping.  Images in `private` are faces of private users, which should not be exposed to an attacker. Images in `public` are considered accessible to anyone, eg. celebrity faces crawled from the Internet.  Face IDs are in `pub_id.csv` and `pvt_id.csv`. Facials attributes (e.g. "Big nose", "Eyeglasses" etc.) are  in `pub_attri.csv` and `pvt_attri.csv`.
 
-The `eval_train.csv` and `eval_test.csv` are a split of `pvt_id.csv`, with completely ID overlapping. `eval_train.csv` is used to train an ID classifier that evaluates the privacy of our defense as an oracle. `eval_train_attri.csv` and `eval_test_attri.csv` are a split of `pvt_attri.csv`, used to evaluate the utility of our defense.
+The `eval_train.csv` and `eval_test.csv` are a split of `pvt_id.csv`, with complete ID overlapping. `eval_train.csv` is used to train an ID classifier that evaluates the privacy of our defense as an oracle. `eval_train_attri.csv` and `eval_test_attri.csv` are a split of `pvt_attri.csv`, used to evaluate the utility of our defense.
+
 
 ### Construct an White-box Attacker
 
-The crafter protection contains an adversarial training process, meaning our protection uses fictitious attack runs.
+Our crafter protection is based on adversarial training --- it uses fictitious white-box attack runs. You may simulate a white-box attacker as follows.
 
 #### Train GAN
 
-The generator of a GAN is the prior knowledge of the fictitious attacker, trained by `public` images.
+You will first need a GAN generator trained on `public` images, representing the prior knowledge of the fictitious attacker.
 
-Change the work dictionary to `WhiteBoxAttack` and run
-
+Download a pretrained public GAN parameter, or train your own GAN with
 ````shell
+$ cd WhiteBoxAttack/
 $ python train_gan.py --latent_dim 500 --img_size 64
 ````
-
- to train the GAN. You can modify the value of `latent_dim`, which is the dimension of the latent vector (the input of the generator). We use 500 for CelebA and 3000 for LFW. The `img_size` should match the images in previous section. 
+You can modify  `latent_dim`, the dimension of the latent vector (the input of the generator). In our test, setting it to 500 for CelebA and 3000 for LFW does the trick. The `img_size` should match your image dimension. 
 
 The result will be saved in `repo_root/Gan/`.
 
-#### Train Amortize Net
+#### Train Amortize Net (optional)
 
-The white-box attacker will solve a optimization problem on the domain of latent vector, the input of the generator. To solve the problem, the attacker need to initialize the value of latent vector $z$, to use gradient descent method. To shorten the time required to attack, we train an amortize net which receive a feature as input and output a $z$ value to approximate the solution of the optimization problem. 
+White-box attackers solve an optimization problem on the latent vector, starting at a random initialization point. This optimization process can take quite a while to finish. To speed it up, you may train an amortizor model --- it receives a feature as input and outputs a latent vector $z$, which will be the new initialization point. To train one, run
 
 ```shell
 $ python trainAmor.py
+$ cd ../
 ```
 
-Some hyperparameters in this code may need to be adjusted.
 
 #### White-box Attack
 
-The white-box attack is implemented in `Crafter_protection/attacker.py`.
+The complete white-box attack is implemented in `WhiteBoxAttack/attacker.py`.
 
 ### Inference Scenario
 
-The inference task will take an image as the input, feed it into an encoder to get the feature, then put the feature into a classifier to get the prediction result.
+The inference task passes an input image through an encoder and gets the feature, which is then fed into a classifier to generate the final prediction.
 
-Here we assume you have a trained encoder and a downstream classifier. Otherwise please run the following code to get one. 
-
+Here you should have a trained encoder and a downstream classifier, with models defined in `Crafter_protection/models.py` and parameters stored under `params/`. It not, try  
 ```shell
+$ cd Crafter_protection/
 $ python trainTargetNet.py -whole
 ```
+It will train a splitted ResNet18 as a demo.
 
-In our experiments, the structures of the encoder and classifier are a segmentation of ResNet18. The combination of the both forms a complete ResNet18. The definitions of these nets are shown in `Crafter_protection/models.py`.
-
-Once the target net is prepared, the crafter protection algorithm is ready to run.
-
+You are now ready to run the crafter protection with
 ```shell
 $ python featureCrafter.py
+$ cd ../
 ```
 
-The code will save the released protected features as files. The released protected features are exactly what the edge devices need to send to the cloud server.
+The protected features will be saved to `../Crafter_result/`, ready for cloud server inference.
 
-For z crafter algorithm, run `python zCrafter.py`. 
+We also implement the inferior z-crafter protection in `zCrafter.py`. It runs much faster than featureCrafter, but comes at the cost of weaker protection.
+
+
 
 ### Training Scenario
 
-The steps for training scenario is similar to inference one. The difference is that the protected features will be the training dataset for the downstream classifier.
-
-Change the work dictionary to `Craft_protection` and run the following code to train the downstream classifier.
+The training scenario is pretty much the same as the inference one. The only difference is that the encoder and cloud models are not trained apriori, and the protected features serve as the training data for the cloud model. Run
 
 ```shell
 $ python trainClassifier.py
+$ cd ../
 ```
 
 ## Evaluate Privacy and Utility
 
-The evaluation is done by code `evaluate.py`. 
-
 ### Privacy
 
-**Step1.**  Use both black-box and white-box attack to reconstruct images of `dataset/eval_test.csv` given protected features. 
+To see how well the features are protected, you may use either black-box or white-box attack to reconstruct images of `dataset/eval_test.csv`. 
 
-The black-box attack is implemented in `BlackBoxAttack` dictionary. The white-box attack is the one we used in Crafter protection.
+**Step1. Build the attackers**
 
-**Step2.**  Feed the reconstructed images into an ID classifier trained on `dataset/eval_train.csv`
+The white-box attack is the one we used in Crafter protection. 
+ If you wish to simulate an adaptive white-box inversion attacker, run
+```shell
+$ cd WhiteBoxAttack
+$ python adaptiveUpdateG.py
+$ cd ../
+```
+To train a black-box attack, run
+```shell
+$ cd BlackBoxAttack
+$ python trainDecoder.py
+```
+and the attacker model will be saved to `params/dec.pkl`. If you wish to simulate an adaptive blackbox inversion attacker, run
+```shell
+$ python adaptiveTrainDecoder.py
+```
+and the attacker model will be saved to `params/dec_adaptive.pkl`.
 
-The training code is `Image2ID/evalTrain.py`. The structure of ID classifier is defined in `models.py`. 
+**Step2. Train the evaluating networks.** 
+The oracle evaluating network (an ID classification network) is defined in `models.py`. To train it, run
+```shell
+$ cd Image2ID/
+$ python evalTrain.py
+```
+You can also define your own oracle and train it on `dataset/eval_train.csv`.
+Some otther choices for the oracle are:
 
-**Step3.**  Calculate the accuracy of the ID classifier as the fictitious attacker's success rate. Calculate the SSIM and FSIM metrics between (reconstructed image, original image) pair as an indicator of the  quality of the reconstructed images.
+1. Python library `facenet_pytorch` provide some pretrained identification network. Limitations: Image size 64 * 64 is too small for these provided network. This choice is only implemented on LFW of size 128 * 128. The training code is `Image2ID/facenetTrain.py`.
+2. Commercial Face Identification Service. You can upload the `eval_train` set to Azure server, and then upload the reconstructed images to query their IDs. Same as `facenet_pytorch`, Azure does not work on small images either. 
+3. Instead of predicting ID from the reconstructed images, an attacker can also predict the ID from the protected feature directly. This attack is implemented in `Feature2ID`. 
 
-There are more choices for the ID classifier:
 
-1. Python library `facenet_pytorch` provide some pretrained identification network. Limitations: Image size 64 * 64 is too small for these provided network. This choice is only used in case of LFW 128 * 128. Training code is `Image2ID/facenetTrain.py`.
-2. Commercial Face Identification Service. In the experiments, we upload the `eval_train` set to Azure server and upload reconstructed images to query their IDs. The same limitation as `facenet_pytorch`. 
-3. Instead of predicting ID given the reconstructed images, an attacker can also predict ID directly given the protected feature. The feature to ID attack is implemented in `Feature2ID`. 
+
+**Step3. Reconstruct the images and test their privacy.**  
+
+Run 
+```shell
+$ python evaluate.py
+```
+to check the ID classification accuracy, SSIM and FSIM metrics as indicators of the  privacy of the reconstructed images.
 
 ### Utility
 
-We use multiple binary classification tasks as the evaluation of downstream utility. For CelebA dataset, we choose all of the 40 attributes to classify, while we choose 10 of 73 attributes of LFW dataset. The metric to evaluate the performance of the downstream classification is **Area Under Curve** (AUC), implemented by python lib `sklearn.metrics`. 
+To simulate a challenging utility task, we choose the multiple binary classification tasks to evaluate the protected feature's utility. For CelebA dataset, we classify all 40 attributes all at once. For the LFW dataset, we choose 10 out of 73 attributes. lay around with these options in `evaluate.py` and `metrics.py` to customize as you like!

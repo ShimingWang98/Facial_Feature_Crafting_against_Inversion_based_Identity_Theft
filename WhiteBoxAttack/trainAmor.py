@@ -94,3 +94,4 @@ for e in range(epoch):
     if e % 10 == 0:
         save_tensor_images(G(amor(Enc(imgs))).detach(), test_amor_dir + 'inv_epoch{}.jpg'.format(e))
         torch.save(amor.module.state_dict(), result_dir + f"amor_zd{latent_dim}_epoch{e}.pkl")
+torch.save(amor.module.state_dict(), '../params/amor.pkl')

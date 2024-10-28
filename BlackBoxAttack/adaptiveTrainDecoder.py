@@ -33,7 +33,7 @@ if __name__ == "__main__":
     pub_attr = "../dataset/pub_attri.csv"
     pub_fig = "../dataset/public"
 
-    os.makedirs(f'../params/blackAtk/', exist_ok=True)
+    os.makedirs(f'../params/decoder/', exist_ok=True)
 
 
     bs = 128
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     Dec = Decoder()
     Dec = nn.DataParallel(Dec).cuda()
-    Dec.load_state_dict(torch.load("../params/blackAtk/dec.pkl"))
+    Dec.load_state_dict(torch.load("../params/dec.pkl"))
     Dec.train()
     dec_optimizer = optim.Adam(Dec.parameters())
 
@@ -90,5 +90,5 @@ if __name__ == "__main__":
         print("epoch:{}\tdec_loss: {}".format(T, total_loss_dec / cnt_1))
 
         if (T + 1) % 10 == 0:
-            torch.save(Dec.module.state_dict(), f'../advBlackDec/beta{beta}/decoder_epoch{T}.pkl')
-    torch.save(Dec.module.state_dict(), f'./advBlackDec/beta{beta}/decoder_final.pkl')
+            torch.save(Dec.module.state_dict(), f'../params/decoder_adaptive/beta{beta}/decoder_epoch{T}.pkl')
+    torch.save(Dec.module.state_dict(), f'../params/dec_adaptive.pkl')

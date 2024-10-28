@@ -58,3 +58,8 @@ for eid in range(30):
         torch.save(net.module.state_dict(), os.path.join(result_dir,'param_epoch_{}.pt'.format(eid)))
     else:
         torch.save(net.module.fc.state_dict(), os.path.join(result_dir,'param_epoch_{}.pt'.format(eid)))
+
+if args.whole:
+    torch.save(net.module.state_dict(), '../params/enc.pt')
+else:
+    torch.save(net.module.fc.state_dict(), '../params/enc.pt')
