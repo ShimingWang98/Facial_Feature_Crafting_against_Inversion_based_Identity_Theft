@@ -5,11 +5,10 @@
 ## Overview
 
 This repository contains the implementation and appendix of our [NDSS '24 paper](https://www.ndss-symposium.org/wp-content/uploads/2024-326-paper.pdf).
-We provide a defense to protect identity information in facial images from inversion attacks. 
-It can be deployed as a plug-in to general edge-cloud computing frameworks without any change in the backend models.
+We provide a defense to protect the private identity information in facial images from inversion attacks. 
+It is deployable as a plug-in to general edge-cloud computing frameworks without any change in the backend models.
 
 This defense is compatible with general deep learning tasks including both inference and training:
-
 - Inference: The server itself trains both feature extractor and downstream classifier without our defense. Then the feature extractor and our defense run on edge devices. The downstream classifier on cloud receives the protected feature as input and completes the inference.
 
 - Training: The server deploys a pretrained feature extractor to edge devices. Edge devices run our defense and upload the protected features to the cloud, which then serve as the training data of the downstream classifier.
