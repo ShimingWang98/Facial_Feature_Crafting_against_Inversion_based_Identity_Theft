@@ -24,7 +24,7 @@ gender_idx = 20
 target_idx = gender_idx
 
 
-def gradient_penalty(x, y, c):
+def gradient_penalty(x, y):
     # interpolation
     shape = [x.size(0)] + [1] * (x.dim() - 1)
     alpha = torch.rand(shape).cuda()
@@ -32,7 +32,7 @@ def gradient_penalty(x, y, c):
     z = z.cuda()
     z.requires_grad = True
 
-    o = discriminator(z, c)
+    o = discriminator(z)
     g = grad(o, z, grad_outputs=torch.ones(o.size()).cuda(), create_graph=True)[0].view(z.size(0), -1)
     gp = ((g.norm(p=2, dim=1) - 1) ** 2).mean()
 
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     print("latent dimension ", latent_dim)
     print("learning rate", opt.lr)
     # Initialize generator and discriminator
-    generator = GanGenerator(z_dim=latent_dim, y_dim=2)
+    generator = GanGenerator(in_dim=latent_dim)
     generator = nn.DataParallel(generator).cuda()
-    discriminator = GanDiscriminator(y_dim=2)  # 3
+    discriminator = GanDiscriminator(in_dim=2)  # 3
     discriminator = nn.DataParallel(discriminator).cuda()
 
     trans_n = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
@@ -99,22 +99,20 @@ if __name__ == "__main__":
     batches_done = 0
     epoch = 0
     while batches_done < opt.n_iters:
-        for i, (imgs, cond) in enumerate(dataloader):
+        for i, (imgs, _) in enumerate(dataloader):
             epoch += 1
             # Configure input
             real_imgs = imgs.cuda()
-            cond = cond[:, target_idx].cuda()
-            cond = torch.nn.functional.one_hot(cond, 2)
             # Sample noise as generator input
             z = torch.randn((imgs.shape[0], latent_dim), requires_grad=True).cuda()
 
             # Generate a batch of images
-            fake_imgs = generator(z, cond)
+            fake_imgs = generator(z)
 
             # Real images
-            real_validity = discriminator(real_imgs, cond)
-            fake_validity = discriminator(fake_imgs, cond)
-            gp = gradient_penalty(real_imgs.data, fake_imgs.data, cond.data)
+            real_validity = discriminator(real_imgs)
+            fake_validity = discriminator(fake_imgs)
+            gp = gradient_penalty(real_imgs.data, fake_imgs.data)
             # Adversarial loss
             d_loss = -torch.mean(real_validity) + torch.mean(fake_validity) + lambda_gp * gp
 
@@ -127,10 +125,10 @@ if __name__ == "__main__":
             # Train the generator every n_critic steps
             if (batches_done + 1) % opt.n_critic == 0:
                 # Generate a batch of images
-                fake_imgs = generator(z, cond)
+                fake_imgs = generator(z)
                 # Loss measures generator's ability to fool the discriminator
                 # Train on fake images
-                fake_validity = discriminator(fake_imgs, cond)
+                fake_validity = discriminator(fake_imgs)
 
                 # z1, z2 = torch.randn(bs, latent_dim).cuda(), torch.randn(bs, latent_dim).cuda()
                 # loss_div = -torch.mean(torch.norm(Enc(generator(z1)) - Enc(generator(z2))) / torch.norm(z1 - z2))
