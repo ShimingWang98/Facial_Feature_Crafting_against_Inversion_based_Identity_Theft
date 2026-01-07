@@ -1,0 +1,10 @@
+bcolz==1.2.1
+matplotlib==3.2.2
+numpy==1.19.0
+nvidia-ml-py3==7.352.0
+Pillow==7.1.2
+scipy==1.5.0
+tqdm==4.47.0
+virtualenv==20.0.25
+future==0.18.2
+git+https://github.com/S-aiueo32/lpips-pytorch.git
